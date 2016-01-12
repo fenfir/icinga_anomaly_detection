@@ -14,6 +14,21 @@ shinyUI(fluidPage(
   
   # Sidebar with a slider input for number of bins
   sidebarPanel(
+    tags$head(tags$style(type="text/css", "
+             #loadmessage {
+               position: fixed;
+               top: 0px;
+               left: 0px;
+               width: 100%;
+               padding: 5px 0px 5px 0px;
+               text-align: center;
+               font-weight: bold;
+               font-size: 100%;
+               color: #000000;
+               background-color: #CCFF66;
+               z-index: 105;
+             }
+          ")),
     checkboxInput("host_data", "Break down by host", value = TRUE),
     uiOutput("measurement"),
     
@@ -38,7 +53,9 @@ shinyUI(fluidPage(
                 selected = "d"),
     
     checkboxInput("residual_only", "Remove trend, then ESD residual", value = FALSE),
-    submitButton("Submit")
+    submitButton("Submit"),
+    conditionalPanel(condition="$('html').hasClass('shiny-busy')",
+                     tags$div("Loading...",id="loadmessage"))
   ),
   
   # Show a plot of the generated distribution
