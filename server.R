@@ -8,6 +8,9 @@
 library(shiny)
 source("influx.R")
 
+options(shiny.host="0.0.0.0")
+options(shiny.port=6102)
+
 shinyServer(function(input, output) {
   db = "icinga"
   con = NULL
