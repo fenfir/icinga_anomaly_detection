@@ -46,13 +46,27 @@ shinyServer(function(input, output) {
       plot_output_list <- lapply(1:length(res), function(i) {
         local({
           my_i <- i
-          plotname <- paste("plot", my_i, sep = "")
+          if(length(res[[my_i]]$anoms$anoms) == 0)
+            return()
           
-          plotOutput(plotname, height = 280)
+          plotname <- paste("plot", my_i, sep = "")
+          headername <- paste(plotname, "descrip", sep = "")
+          header <- paste(length(res[[my_i]]$anoms$anoms), "anomalies detected")
+
+          outputs = list(wellPanel(
+            plotOutput(plotname, height = 280),
+            textOutput(headername)
+          ))
+          
+          output[[headername]] <- renderText({
+            header
+          })
           
           output[[plotname]] <- renderPlot({
             res[[my_i]]$plot
           })
+          
+          do.call(tagList, outputs)
         })
       })
       
@@ -61,15 +75,25 @@ shinyServer(function(input, output) {
     else {
       measurement = input$measurement
       res <- checkAnomaliesForService(con, db, measurement, time, max_anoms)
+      outputname = "anomalyOutput"
       plotname = "distPlot"
+      headername <- paste(plotname, "descrip", sep = "")
+      header <- paste(length(res$anoms$anoms), " anomalies detected")
       
-      plot_output_list = list(plotOutput(plotname, height = 280))
+      outputs = list(wellPanel(
+        plotOutput(plotname, height = 280),
+        textOutput(headername)
+      ))
       
       output[[plotname]] <- renderPlot({ 
         print(res$plot)
       })
       
-      do.call(tagList, plot_output_list)
+      output[[headername]] <- renderText({
+        header
+      })
+      
+      do.call(tagList, outputs)
     }
   })
 })

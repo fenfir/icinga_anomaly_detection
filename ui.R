@@ -60,6 +60,9 @@ shinyUI(fluidPage(
   
   # Show a plot of the generated distribution
   mainPanel(
-    uiOutput("plots")
+    tabsetPanel(
+      tabPanel("Plots", uiOutput("plots")),
+      tabPanel("Influx", textOutput("influx_data"))
+    )
   )
 ))
