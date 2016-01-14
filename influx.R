@@ -9,7 +9,7 @@ test <- function() {
   
   db = "icinga"
   measurement = "icinga.service.ntp_time.offset"
-  res <- checkAnomaliesForService(con = con, db = db, time="30d", max_anom=0.02, measurement = measurement)
+  res <- checkAnomaliesForServiceHosts(con = con, db = db, time="30d", max_anom=0.02, measurement = measurement)
   resultToInflux(res)
 }
 
@@ -22,7 +22,8 @@ connectToHost <- function(host, port, user, pass, db) {
 
 getMeasurements <- function(con, db) {
   cat("Getting measurements", "\n")
-  measurements <- influxdbr::show_measurements(con = con, db = db)
+  measurements <- influxdbr::show_measurements(con = con, 
+                                               db = db)
   return(measurements)
 }
 
@@ -62,12 +63,12 @@ checkAnomaliesForServiceHosts <- function(con, db, measurement, time, max_anoms)
                            return_xts = FALSE)
   
   returned_res = list()
-  returned_res <- checkAnomaliesForHost(results, returned_res, max_anoms)
+  returned_res <- checkAnomaliesForHost(results, returned_res, max_anoms, measurement)
   
   return(returned_res)
 }
 
-checkAnomaliesForHost <- function(results, returned_res, max_anoms) {
+checkAnomaliesForHost <- function(results, returned_res, max_anoms, measurement) {
   if(length(results) == 0)
     return (returned_res)
   
@@ -84,21 +85,24 @@ checkAnomaliesForHost <- function(results, returned_res, max_anoms) {
   returned_res[[length(returned_res)+1]] <- res
   results[[1]] <- NULL
   
-  checkAnomaliesForHost(results, returned_res, max_anoms)
+  checkAnomaliesForHost(results, returned_res, max_anoms, measurement)
 }
 
 resultToInflux <- function(res) {
   influx <- list()
   plot = res$plot
   result = res$anoms
-  for(i in 1:nrow(result)) {
-    pos = regexpr(':', plot$labels$title)
-    tags = substr(plot$labels$title, 0, pos - 2)
-    values = paste("value=", result[i, "anoms"], ",text=Automatic\\ anomaly\\ detection", sep = "")
-    timestamp = format(as.numeric(as.POSIXct(result[i, "timestamp"], origin="1970-01-01")) * 1000000, scientific=FALSE)
-    line = paste("events.anomalies", tags, values, timestamp)
-    
-    influx[[i]] <- line
+  
+  if(length(result) > 0) {
+    for(i in 1:nrow(result)) {
+      pos = regexpr(':', plot$labels$title)
+      tags = substr(plot$labels$title, 0, pos - 2)
+      values = paste("value=", result[i, "anoms"], ",text=Automatic\\ anomaly\\ detection", sep = "")
+      timestamp = format(as.numeric(as.POSIXct(result[i, "timestamp"], origin="1970-01-01")) * 1000000, scientific=FALSE)
+      line = paste("events.anomalies", tags, values, timestamp)
+      
+      influx[[i]] <- line
+    }
   }
   
   return(influx)
