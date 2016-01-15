@@ -43,6 +43,13 @@ shinyServer(function(input, output) {
       measurement = input$measurement
       res <- checkAnomaliesForServiceHosts(con, db,  measurement, time, max_anoms)
       
+      output$influx_data <- renderUI({
+        ls <- resultsToInflux(res)
+        HTML (
+          paste(ls, sep = "<br/>", collapse = "<br/>") 
+        )
+      })
+      
       plot_output_list <- lapply(1:length(res), function(i) {
         local({
           my_i <- i
@@ -52,7 +59,7 @@ shinyServer(function(input, output) {
           plotname <- paste("plot", my_i, sep = "")
           headername <- paste(plotname, "descrip", sep = "")
           header <- paste(length(res[[my_i]]$anoms$anoms), "anomalies detected")
-
+          
           outputs = list(wellPanel(
             plotOutput(plotname, height = 280),
             textOutput(headername)

@@ -62,7 +62,7 @@ shinyUI(fluidPage(
   mainPanel(
     tabsetPanel(
       tabPanel("Plots", uiOutput("plots")),
-      tabPanel("Influx", textOutput("influx_data"))
+      tabPanel("Influx", uiOutput("influx_data"))
     )
   )
 ))

@@ -10,7 +10,7 @@ test <- function() {
   db = "icinga"
   measurement = "icinga.service.ntp_time.offset"
   res <- checkAnomaliesForServiceHosts(con = con, db = db, time="30d", max_anom=0.02, measurement = measurement)
-  resultToInflux(res)
+  i <- resultsToInflux(res)
 }
 
 connectToHost <- function(host, port, user, pass, db) {
@@ -86,6 +86,16 @@ checkAnomaliesForHost <- function(results, returned_res, max_anoms, measurement)
   results[[1]] <- NULL
   
   checkAnomaliesForHost(results, returned_res, max_anoms, measurement)
+}
+
+resultsToInflux <- function(results) {
+  if(length(results) == 0)
+    return(list())
+  
+  influxD <- resultToInflux(results[[1]])
+  results[[1]] <- NULL  
+  
+  return (c(influxD, resultsToInflux(results)))
 }
 
 resultToInflux <- function(res) {
