@@ -2,7 +2,6 @@
 library(xts)
 library(influxdbr)
 library(AnomalyDetection)
-library(foreach)
 
 test <- function() {
   con <- connectToHost("localhost", 8086, "root", "root")
@@ -106,10 +105,10 @@ resultToInflux <- function(res) {
   if(length(result) > 0) {
     for(i in 1:nrow(result)) {
       pos = regexpr(':', plot$labels$title)
-      tags = substr(plot$labels$title, 0, pos - 2)
-      values = paste("value=", result[i, "anoms"], ",text=Automatic\\ anomaly\\ detection", sep = "")
-      timestamp = format(as.numeric(as.POSIXct(result[i, "timestamp"], origin="1970-01-01")) * 1000000, scientific=FALSE)
-      line = paste("events.anomalies", tags, values, timestamp)
+      tags = paste("event.anomaly", substr(plot$labels$title, 0, pos - 2), "text=Automatic\\ anomaly\\ detection", sep = ",")
+      values = paste("value=", result[i, "anoms"], sep = "")
+      timestamp = format(as.numeric(as.POSIXct(result[i, "timestamp"], origin="1970-01-01")) * 1000000000, scientific=FALSE)
+      line = paste(tags, values, timestamp)
       
       influx[[i]] <- line
     }
